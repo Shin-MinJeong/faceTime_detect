@@ -31,8 +31,9 @@ int main()
 	waitKey(0);
 
 	return 0;
-}
+} 
 
+// 피부색 영역 검출
 void detect_Ycrcb() {
 
     Mat ycrcbImg;
