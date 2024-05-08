@@ -5,14 +5,17 @@
 #include <opencv2/core/utils/logger.defines.hpp>
 #include <opencv2/core/utils/logtag.hpp>
 #include <opencv2/core/utils/logger.hpp> 
+
+
 #define OPENCV_LOGGER_DEFINES_HPP
 
 using namespace cv;
 using namespace std;
 
-Mat img, tmpimg, handImg;
+Mat img, tmpimg, skinImg, handImg;
 
 void detect_Ycrcb();
+void detect_hands();
 
 int main()
 {
@@ -27,6 +30,7 @@ int main()
 
 	imshow("image", img);
 	detect_Ycrcb();
+    detect_hands();
 
 	waitKey(0);
 
@@ -41,14 +45,44 @@ void detect_Ycrcb() {
     cvtColor(img, ycrcbImg, COLOR_BGR2YCrCb); 
     inRange(ycrcbImg, Scalar(0, 133, 77), Scalar(255, 173, 127), ycrcbImg); 
 
-    handImg = Mat::zeros(img.size(), CV_8UC3); 
+    skinImg = Mat::zeros(img.size(), CV_8UC3);
 
-    bitwise_and(img, img, handImg, ycrcbImg); 
+    bitwise_and(img, img, skinImg, ycrcbImg);
 
-    imshow("handImage", handImg); 
+    imshow("skinImage", skinImg);
 
-    if (handImg.empty()) {
+    if (skinImg.empty()) {
         cout << "이미지를 읽을 수 없습니다." << endl;
         exit(-1);
     } 
+}
+
+void detect_hands() {
+
+    CascadeClassifier hand_classifier("D:\\opencv\\build\\etc\\haarcascades\\hand.xml"); 
+
+    if (hand_classifier.empty()) { 
+        cerr << "XML 로드 실패" << endl;
+        return;
+    }
+
+    vector<Rect> hands; 
+    hand_classifier.detectMultiScale(skinImg, hands); 
+
+    Mat handImg = skinImg.clone(); // 이미지 복사 
+
+    for (Rect rc : hands) {
+        rectangle(handImg, rc, Scalar(0, 0, 0), 2); 
+    }
+
+    imshow("handImage", handImg); 
+
+    if (handImg.empty()) { 
+        cout << "이미지를 읽을 수 없습니다." << endl; 
+        exit(-1);
+    }
+
+    // CascadeClassifier 로는 손 동작을 감지할 수 없음
+    // openpose 라이브러리 사용?
+
 }
